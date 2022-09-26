@@ -1,0 +1,9 @@
+<h2 class="page-name">Read the Latest Posts</h2>
+
+<ul class="post-list">
+    {{#each posts as |post|}}
+    <li>
+        {{> post-info post }}
+    </li>
+    {{/each}}
+</ul>
