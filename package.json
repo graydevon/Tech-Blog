@@ -7,7 +7,7 @@
     "start": "node server.js",
     "test": "jest"
   },
-  "repository": {
+  "repositnory": {
     "type": "git",
     "url": "git+https://github.com/graydevon/Tech-Blog.git"
   },
