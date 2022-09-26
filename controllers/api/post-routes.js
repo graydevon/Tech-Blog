@@ -1,0 +1,136 @@
+const router = require('express').Router();
+const { Post, User, Comment } = require('../../models');
+const withAuth = require('../../utils/auth');
+
+router.get('/', (req, res) => {
+    Post.findAll({
+        attributes: ['id', 'title', 'post_body', 'created_at'],
+        order: [['created_at', 'DESC']],
+        include: [
+            {
+                model: Comment,
+                attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+                include: {
+                    model: User,
+                    attributes: ['username']
+                }
+            },
+            {
+                model: User,
+                attributes: ['username']
+            }
+        ]
+    })
+        .then(dbPostData => res.json(dbPostData))
+        .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+});
+
+router.get('/:id', (req, res) => {
+    const postId = req.params.id;
+
+    Post.findOne({
+        where: {
+            id: postId
+        },
+        attributes: ['id', 'title', 'post_body', 'created_at'],
+        include: [
+            {
+                model: Comment,
+                attributes: ['id', 'comment_text', 'post_id', 'user_id', 'created_at'],
+                include: {
+                    model: User,
+                    attributes: ['username']
+                }
+            },
+            {
+                model: User,
+                attributes: ['username']
+            }
+        ]
+    })
+        .then(dbPostData => {
+            if (!dbPostData) {
+                res.status(404).json({ message: "We can't find a post." });
+                return;
+            }
+            res.json(dbPostData);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+});
+
+// POST /api/posts
+router.post('/', withAuth, (req, res) => {
+    const title = req.body.title;
+    const postBody = req.body.post_body;
+    const userId = req.session.user_id;
+
+    /* JSON body
+    {
+        "title" : "Article Title",
+        "post_body" : "This is the body of the post.",
+        "user_id" : 1
+    }
+    */
+    Post.create({
+        title: title,
+        post_body: postBody,
+        user_id: userId
+    })
+        .then(dbPostData => res.json(dbPostData))
+        .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+});
+
+router.put('/:id', withAuth, (req, res) => {
+    const postId = req.params.id;
+
+
+    Post.update(req.body, {
+        where: {
+            id: postId
+        }
+    })
+        .then(dbPostData => {
+            if (!dbPostData) {
+                res.status(404).json({ message: "We can't find a post with this id." });
+                return;
+            }
+            res.json(dbPostData);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+});
+
+// DELETE
+router.delete('/:id', withAuth, (req, res) => {
+    const postId = req.params.id;
+
+    Post.destroy({
+        where: {
+            id: postId
+        }
+    })
+        .then(dbPostData => {
+            if (!dbPostData) {
+                res.status(404).json({ message: "We can't find a post with this id" });
+                return;
+            }
+            res.json(dbPostData);
+        })
+        .catch(err => {
+            console.log(err);
+            res.status(500).json(err);
+        });
+});
+
+module.exports = router;
